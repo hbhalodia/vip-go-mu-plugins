@@ -4,7 +4,7 @@
 import { Page } from 'playwright';
 
 const selectors = {
-    entryTitle: '.wp-block-post-title',
+    entryTitle: '.entry-title',
     pageImage: '.entry-content img',
     pageText: ( text: string ) => `text=${ text }`,
 };

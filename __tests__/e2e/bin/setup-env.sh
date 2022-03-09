@@ -32,5 +32,6 @@ docker exec e2etestsite_wordpress_1 sh -c '\
 docker exec e2etestsite_php_1 sh -c '\
     wp plugin install --activate --allow-root classic-editor; \
     wp core update --allow-root --version="${version}" --force; \
+    wp theme install twentytwentyone --allow-root --activate; \
     wp --allow-root vip-search index --setup --skip-confirm \
 '
