@@ -18,16 +18,12 @@ env:
   PHP_VERSION: "7.4"
 
 jobs:
-  test:
-    name: "WordPress ${{ matrix.wp }}, multisite: ${{ matrix.multisite }}, JetPack: ${{ matrix.jetpack }}"
+  test74:
+    name: "WP ${{ matrix.wp }}, MS: ${{ matrix.multisite }}, JP: ${{ matrix.jetpack }}, PHP: 7.4"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php:
-          - "7.4"
-        phpiunit:
-          - "7"
         wp:
           - "5.5.9"
           - "5.6.8"
@@ -40,40 +36,72 @@ jobs:
           - "yes"
         include:
           - wp: "latest"
-            multisite: "yes"
-            jetpack: "yes"
-          - wp: "latest"
             multisite: "no"
             jetpack: "no"
-          - wp: "latest"
-            multisite: "yes"
-            jetpack: "no"
           - wp: "nightly"
             multisite: "no"
-            jetpack: "yes"
+            phpunit: "7"
           - wp: "nightly"
             multisite: "yes"
             jetpack: "yes"
-          - wp: "nightly"
-            multisite: "no"
-            jetpack: "yes"
-            php: "8.0"
-            phpunit: "9"
-          - wp: "nightly"
-            multisite: "yes"
-            jetpack: "yes"
-            php: "8.0"
-            phpunit: "9"
-          - wp: "latest"
-            multisite: "no"
-            jetpack: "yes"
-            php: "8.0"
-            phpunit: "9"
-          - wp: "latest"
-            multisite: "yes"
-            jetpack: "yes"
-            php: "8.0"
-            phpunit: "9"
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.4.0
+        with:
+          submodules: recursive
+      - name: Run tests
+        uses: ./.github/actions/run-wp-tests
+        with:
+          wordpress-version: ${{ matrix.wp }}
+          multisite: ${{ matrix.multisite }}
+          jetpack: ${{ matrix.jetpack }}
+          php-version: ${{ env.PHP_VERSION }}
+          phpunit-version: ${{ env.PHPUNIT_VERSION }}
+
+  test74ms:
+    name: "WP ${{ matrix.wp }}, MS: ${{ matrix.multisite }}, JP: ${{ matrix.jetpack }}, PHP: 7.4"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        wp:
+          - "latest"
+        multisite:
+          - "yes"
+        jetpack:
+          - "yes"
+          - "no"
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.4.0
+        with:
+          submodules: recursive
+      - name: Run tests
+        uses: ./.github/actions/run-wp-tests
+        with:
+          wordpress-version: ${{ matrix.wp }}
+          multisite: ${{ matrix.multisite }}
+          jetpack: ${{ matrix.jetpack }}
+          php-version: ${{ env.PHP_VERSION }}
+          phpunit-version: ${{ env.PHPUNIT_VERSION }}
+
+  test80:
+    name: "WP ${{ matrix.wp }}, MS: ${{ matrix.multisite }}, JP: ${{ matrix.jetpack }}, PHP: 8.0"
+    env:
+      PHPUNIT_VERSION: "9"
+      PHP_VERSION: "8.0"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        wp:
+          - "latest"
+          - "nightly"
+        multisite:
+          - "no"
+          - "yes"
+        jetpack:
+          - "yes"
     steps:
       - name: Check out source code
         uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # tag=v2.4.0
