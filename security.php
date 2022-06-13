@@ -60,8 +60,7 @@ function wpcom_vip_is_restricted_username( $username ) {
  * @param int $cache_expiry The number in seconds of the cache expiry.
  */
 function wpcom_vip_track_auth_attempt( $username, $cache_group, $cache_expiry ) {
-	// phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
-	$ip                    = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	$ip                    = wpcom_vip_get_users_ip_address();
 	$ip_username_cache_key = $ip . '|' . $username; // IP + username
 	$ip_cache_key          = $ip; // IP only
 	$username_cache_key    = $username; // Username only
@@ -93,8 +92,7 @@ function wpcom_vip_login_limiter_on_success( $username ) {
 	// Do some extra sanitization on the username.
 	$username = vip_strict_sanitize_username( $username );
 
-	// phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
-	$ip                    = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	$ip                    = wpcom_vip_get_users_ip_address();
 	$ip_username_cache_key = $ip . '|' . $username; // IP + username
 	$ip_cache_key          = $ip; // IP only
 
@@ -206,8 +204,7 @@ function wpcom_vip_lost_password_limit( $errors, $user_data ) {
 add_action( 'lostpassword_post', 'wpcom_vip_lost_password_limit', 10, 2 );
 
 function wpcom_vip_username_is_limited( $username, $cache_group ) {
-	// phpcs:ignore WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
-	$ip = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	$ip = wpcom_vip_get_users_ip_address();
 
 	$ip_username_cache_key = $ip . '|' . $username;
 	$ip_username_count     = wp_cache_get( $ip_username_cache_key, $cache_group );
@@ -237,7 +234,7 @@ function wpcom_vip_username_is_limited( $username, $cache_group ) {
 
 	/**
 	 * Login Limiting Username Threshold
-	 * 
+	 *
 	 * @param string $username Username of the login request
 	 */
 	$username_threshold = 5 * $ip_username_threshold; // Default to 5 times the IP + username threshold
@@ -264,7 +261,7 @@ function wpcom_vip_username_is_limited( $username, $cache_group ) {
 
 		/**
 		 * Password Reset Username Threshold
-		 * 
+		 *
 		 * @param string $username Username of the password reset request
 		 */
 		$username_threshold = 5 * $ip_username_threshold; // Default to 5 times the IP + username threshold
@@ -291,3 +288,21 @@ function wpcom_vip_username_is_limited( $username, $cache_group ) {
 	return false;
 }
 
+/**
+ * Function to get the user IP from reverse proxy IP or firewall IP or Remote Address.
+ *
+ * @return string
+ */
+function wpcom_vip_get_users_ip_address() {
+
+	// phpcs:disable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+	$ip = filter_var( $_SERVER['HTTP_TRUE_CLIENT_IP'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	if ( empty( $ip ) ) {
+		$ip = filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	}
+	if ( empty( $ip ) ) {
+		$ip = filter_var( $_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP, [ 'options' => [ 'default' => '' ] ] );
+	}
+	// phpcs:enable WordPressVIPMinimum.Variables.ServerVariables.UserControlledHeaders
+	return $ip;
+}
